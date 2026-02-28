@@ -25,17 +25,21 @@ class RateLimiter {
 
     public static boolean[] rateLimiter(int[] requestTimes, int maxInWindow, int windowLength) {
         boolean[] allowed = new boolean[requestTimes.length];
+        // Data structure choice: double ended queue for easy peek, poll, push at the ends. 
         Deque window = new LinkedList<Integer>();
-        // optimization for times when requests.length<maxInWindow, 
+        // 1. optimization for times when requests.length<maxInWindow, 
         // maxInWindow<=windowLength
         
         for (int i = 0; i < requestTimes.length; i++) {
             int currentTime = requestTimes[i];
             int outOfWindow = Math.max(0, currentTime - windowLength - 1);
-            
+
+            // 2. Remove requests that aren't in the window
+            // An alternative is to use a simple counter and loop from a i - outOfWindow
             while (window.size() > 0 && (int) window.peekFirst() < outOfWindow) {
                 window.pollFirst(); 
             }
+            // 3. Allow requests if fewer than max
             if (window.size() < maxInWindow) {
                 window.addLast(requestTimes[i]);
                 allowed[i] = true;
